@@ -7,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth';
-import { Dumbbell, Download } from 'lucide-react';
+import { Dumbbell } from 'lucide-react';
 import Dashboard from '@/components/admin/Dashboard';
 
 export default function Home() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
   const login = useAuthStore((state) => state.login);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -45,7 +44,6 @@ export default function Home() {
           title: 'Welcome back!',
           description: 'You have successfully logged in.',
         });
-        window.location.reload();
       } else {
         toast({
           variant: 'destructive',
@@ -61,39 +59,6 @@ export default function Home() {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleDownload = async () => {
-    setIsDownloading(true);
-    try {
-      const response = await fetch('/api/download');
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'adnan-fitness-club.zip';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast({
-        title: 'Download started!',
-        description: 'Your project is being downloaded.',
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Download failed',
-        description: 'Failed to download the project. Please try again.',
-      });
-    } finally {
-      setIsDownloading(false);
     }
   };
 
@@ -145,17 +110,6 @@ export default function Home() {
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
-          <div className="mt-6 pt-6 border-t border-border">
-            <Button
-              onClick={handleDownload}
-              variant="outline"
-              className="w-full border-2 border-primary/20 hover:bg-primary/10"
-              disabled={isDownloading}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              {isDownloading ? 'Downloading...' : 'Download Project'}
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
