@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import { compare } from 'bcryptjs';
 import { z } from 'zod';
 import { handleApiError, ApiError } from '@/lib/api-error';
@@ -14,11 +14,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { username, password } = loginSchema.parse(body);
 
-    const admin = await db.admin.findUnique({
-      where: { username }
-    });
+    const { data: admin, error: dbError } = await supabase
+      .from('Admin')
+      .select('*')
+      .eq('username', username)
+      .single();
 
-    if (!admin) {
+    if (dbError || !admin) {
       throw new ApiError('Invalid credentials', 401);
     }
 

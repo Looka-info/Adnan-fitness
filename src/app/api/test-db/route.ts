@@ -1,22 +1,26 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    // Check if Payment and Expense models exist
-    const paymentCheck = await db.$queryRaw`SELECT name FROM sqlite_master WHERE type='table' AND name='Payment'`;
-    const expenseCheck = await db.$queryRaw`SELECT name FROM sqlite_master WHERE type='table' AND name='Expense'`;
-    
+    const { data: admin, error } = await supabase
+      .from('Admin')
+      .select('username')
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+
     return NextResponse.json({
-      paymentTable: paymentCheck,
-      expenseTable: expenseCheck,
-      hasPaymentModel: !!db.payment,
-      hasExpenseModel: !!db.expense
+      success: true,
+      message: 'Successfully connected to database',
+      adminFound: !!admin
     });
   } catch (error: any) {
-    return NextResponse.json({
-      error: error.message,
-      stack: error.stack
-    }, { status: 500 });
+    console.error('Database connection test failed:', error);
+    return NextResponse.json(
+      { error: 'Failed to connect to database', stack: error.stack },
+      { status: 500 }
+    );
   }
 }

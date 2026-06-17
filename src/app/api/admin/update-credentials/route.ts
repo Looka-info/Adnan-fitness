@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import { compare, hash } from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
@@ -14,9 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the admin (assuming there's only one admin for now)
-    const admin = await db.admin.findFirst();
+    const { data: admin, error: dbError } = await supabase
+      .from('Admin')
+      .select('*')
+      .limit(1)
+      .single();
 
-    if (!admin) {
+    if (dbError || !admin) {
       return NextResponse.json(
         { error: 'Admin account not found' },
         { status: 404 }
@@ -51,10 +55,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const updatedAdmin = await db.admin.update({
-      where: { id: admin.id },
-      data: updateData
-    });
+    const { data: updatedAdmin, error: updateError } = await supabase
+      .from('Admin')
+      .update(updateData)
+      .eq('id', admin.id)
+      .select()
+      .single();
+
+    if (updateError || !updatedAdmin) {
+       throw updateError;
+    }
 
     return NextResponse.json({
       success: true,

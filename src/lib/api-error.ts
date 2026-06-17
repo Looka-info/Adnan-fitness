@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
 
 export class ApiError extends Error {
   public statusCode: number;
@@ -14,14 +13,14 @@ export class ApiError extends Error {
   }
 }
 
-export function handleApiError(error: unknown) {
+export function handleApiError(error: any) {
   console.error('API Error:', error);
 
   if (error instanceof z.ZodError) {
     return NextResponse.json(
       {
         error: 'Validation Error',
-        details: error.errors.map(e => ({
+        details: error.errors.map((e: any) => ({
           field: e.path.join('.'),
           message: e.message
         }))
@@ -40,22 +39,26 @@ export function handleApiError(error: unknown) {
     );
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    // Handle specific Prisma database errors
-    if (error.code === 'P2002') {
+  // Handle Supabase/PostgREST errors
+  if (error && typeof error === 'object' && 'code' in error) {
+    // Unique constraint violation
+    if (error.code === '23505') {
       return NextResponse.json(
         { error: 'A record with this value already exists' },
         { status: 409 }
       );
     }
-    if (error.code === 'P2025') {
+    
+    // Check for row not found in single() queries
+    if (error.code === 'PGRST116') {
       return NextResponse.json(
         { error: 'Record not found' },
         { status: 404 }
       );
     }
+    
     return NextResponse.json(
-      { error: 'Database error occurred' },
+      { error: error.message || 'Database error occurred' },
       { status: 500 }
     );
   }

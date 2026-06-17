@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(
   request: NextRequest,
@@ -7,11 +7,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const member = await db.member.findUnique({
-      where: { id }
-    });
+    const { data: member, error } = await supabase
+      .from('Member')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!member) {
+    if (error || !member) {
       return NextResponse.json(
         { error: 'Member not found' },
         { status: 404 }
@@ -37,18 +39,23 @@ export async function PUT(
     const body = await request.json();
     const { name, email, phone, picture, details, membershipFee, status } = body;
 
-    const member = await db.member.update({
-      where: { id },
-      data: {
-        name: name !== undefined ? name : undefined,
-        email: email !== undefined ? email : undefined,
-        phone: phone !== undefined ? phone : undefined,
-        picture: picture !== undefined ? picture : undefined,
-        details: details !== undefined ? details : undefined,
-        membershipFee: membershipFee !== undefined ? membershipFee : undefined,
-        status: status !== undefined ? status : undefined
-      }
-    });
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (phone !== undefined) updateData.phone = phone;
+    if (picture !== undefined) updateData.picture = picture;
+    if (details !== undefined) updateData.details = details;
+    if (membershipFee !== undefined) updateData.membershipFee = membershipFee;
+    if (status !== undefined) updateData.status = status;
+
+    const { data: member, error } = await supabase
+      .from('Member')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ member });
   } catch (error) {
@@ -66,9 +73,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await db.member.delete({
-      where: { id }
-    });
+    const { error } = await supabase
+      .from('Member')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {

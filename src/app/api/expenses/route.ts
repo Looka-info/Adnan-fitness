@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const expenses = await db.expense.findMany({
-      orderBy: {
-        date: 'desc'
-      }
-    });
+    const { data: expenses, error } = await supabase
+      .from('Expense')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) throw error;
 
     return NextResponse.json({ expenses });
   } catch (error) {
@@ -31,14 +32,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const expense = await db.expense.create({
-      data: {
+    const { data: expense, error } = await supabase
+      .from('Expense')
+      .insert({
         amount: parseFloat(amount),
         category,
         description: description || null,
-        date: new Date()
-      }
-    });
+        date: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error || !expense) throw error;
 
     return NextResponse.json({ expense }, { status: 201 });
   } catch (error) {

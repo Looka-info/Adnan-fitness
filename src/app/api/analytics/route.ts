@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,46 +8,29 @@ export async function GET(request: NextRequest) {
 
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - months);
+    const startDateStr = startDate.toISOString();
 
     // Get member joins per month
-    const members = await db.member.findMany({
-      where: {
-        createdAt: {
-          gte: startDate
-        }
-      },
-      select: {
-        createdAt: true,
-        status: true
-      }
-    });
+    const { data: members, error: err1 } = await supabase
+      .from('Member')
+      .select('createdAt, status')
+      .gte('createdAt', startDateStr);
 
     // Get payments per month
-    const payments = await db.payment.findMany({
-      where: {
-        date: {
-          gte: startDate
-        }
-      },
-      select: {
-        date: true,
-        amount: true
-      }
-    });
+    const { data: payments, error: err2 } = await supabase
+      .from('Payment')
+      .select('date, amount')
+      .gte('date', startDateStr);
 
     // Get expenses per month
-    const expenses = await db.expense.findMany({
-      where: {
-        date: {
-          gte: startDate
-        }
-      },
-      select: {
-        date: true,
-        amount: true,
-        category: true
-      }
-    });
+    const { data: expenses, error: err3 } = await supabase
+      .from('Expense')
+      .select('date, amount, category')
+      .gte('date', startDateStr);
+
+    if (err1 || err2 || err3) {
+      throw err1 || err2 || err3;
+    }
 
     // Get current totals
     const totalIncome = payments.reduce((sum, p) => sum + p.amount, 0);
@@ -102,9 +85,11 @@ export async function GET(request: NextRequest) {
     }));
 
     // Member status distribution
-    const allMembers = await db.member.findMany();
-    const activeMembers = allMembers.filter(m => m.status === 'active').length;
-    const inactiveMembers = allMembers.filter(m => m.status === 'inactive').length;
+    const { data: allMembers, error: err4 } = await supabase.from('Member').select('status');
+    if (err4) throw err4;
+    
+    const activeMembers = (allMembers || []).filter((m: any) => m.status === 'active').length;
+    const inactiveMembers = (allMembers || []).filter((m: any) => m.status === 'inactive').length;
 
     const memberStatusData = [
       { name: 'Active', value: activeMembers, fill: 'hsl(142, 76%, 36%)' },

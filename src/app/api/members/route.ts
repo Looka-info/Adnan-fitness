@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import { z } from 'zod';
 import { handleApiError } from '@/lib/api-error';
 
@@ -15,11 +15,12 @@ const memberSchema = z.object({
 
 export async function GET() {
   try {
-    const members = await db.member.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    const { data: members, error } = await supabase
+      .from('Member')
+      .select('*')
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
 
     return NextResponse.json({ members });
   } catch (error) {
@@ -32,19 +33,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = memberSchema.parse(body);
 
-    const member = await db.member.create({
-      data: {
+    const { data: member, error } = await supabase
+      .from('Member')
+      .insert({
         name: data.name,
         email: data.email || null,
         phone: data.phone || null,
         picture: data.picture || null,
         details: data.details || null,
         membershipFee: data.membershipFee,
-        membershipStart: data.membershipStart ? new Date(data.membershipStart) : new Date(),
-        lastPaymentDate: new Date(),
+        membershipStart: data.membershipStart ? new Date(data.membershipStart).toISOString() : new Date().toISOString(),
+        lastPaymentDate: new Date().toISOString(),
         status: 'active'
-      }
-    });
+      })
+      .select()
+      .single();
+
+    if (error || !member) throw error;
 
     return NextResponse.json({ member }, { status: 201 });
   } catch (error) {

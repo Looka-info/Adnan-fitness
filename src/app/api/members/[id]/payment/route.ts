@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(
   request: NextRequest,
@@ -10,24 +10,30 @@ export async function POST(
     const body = await request.json();
     const { amount } = body;
 
-    const member = await db.member.update({
-      where: { id },
-      data: {
-        lastPaymentDate: new Date(),
-        membershipFee: amount !== undefined ? parseFloat(amount) : undefined
-      }
-    });
+    const { data: member, error: memberError } = await supabase
+      .from('Member')
+      .update({
+        lastPaymentDate: new Date().toISOString(),
+        ...(amount !== undefined && { membershipFee: parseFloat(amount) })
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (memberError || !member) throw memberError;
 
     // Create payment record
     const paymentAmount = amount !== undefined ? parseFloat(amount) : member.membershipFee;
-    await db.payment.create({
-      data: {
+    const { error: paymentError } = await supabase
+      .from('Payment')
+      .insert({
         amount: paymentAmount,
-        date: new Date(),
+        date: new Date().toISOString(),
         description: `Membership payment from ${member.name}`,
         memberId: id
-      }
-    });
+      });
+
+    if (paymentError) throw paymentError;
 
     return NextResponse.json({ member });
   } catch (error) {
