@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   keywords: ["Fitness Club", "Gym Management Software", "Member Tracking", "Adnan Fitness", "Gym Billing", "Membership Management", "Fitness Business"],
   authors: [{ name: "Adnan Fitness Club" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "/favicon.png",
   },
   openGraph: {
     title: "Adnan Fitness Club - Premium Member Management",

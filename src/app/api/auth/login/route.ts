@@ -1,36 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { compare } from 'bcryptjs';
+import { z } from 'zod';
+import { handleApiError, ApiError } from '@/lib/api-error';
+
+const loginSchema = z.object({
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, password } = await request.json();
-
-    if (!username || !password) {
-      return NextResponse.json(
-        { error: 'Username and password are required' },
-        { status: 400 }
-      );
-    }
+    const body = await request.json();
+    const { username, password } = loginSchema.parse(body);
 
     const admin = await db.admin.findUnique({
       where: { username }
     });
 
     if (!admin) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      throw new ApiError('Invalid credentials', 401);
     }
 
     const isValidPassword = await compare(password, admin.password);
 
     if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      throw new ApiError('Invalid credentials', 401);
     }
 
     return NextResponse.json({
@@ -41,10 +36,6 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
