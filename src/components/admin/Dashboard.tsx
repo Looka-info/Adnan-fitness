@@ -245,6 +245,8 @@ export default function Dashboard() {
         method: 'DELETE',
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         toast({
           title: 'Success',
@@ -256,14 +258,15 @@ export default function Dashboard() {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to delete member',
+          description: data.error || 'Failed to delete member',
         });
       }
     } catch (error) {
+      console.error('Delete error:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Something went wrong',
+        description: error instanceof Error ? error.message : 'Something went wrong',
       });
     }
   };

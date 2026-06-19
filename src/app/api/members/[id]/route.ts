@@ -73,18 +73,23 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('Member')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase delete error:', error);
+      throw error;
+    }
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
+    return NextResponse.json({ success: true, data });
+  } catch (error: any) {
     console.error('Error deleting member:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error?.message || 'Failed to delete member', details: error },
       { status: 500 }
     );
   }
