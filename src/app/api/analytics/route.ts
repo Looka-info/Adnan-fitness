@@ -106,10 +106,10 @@ export async function GET(request: NextRequest) {
       paymentCount: (payments || []).length,
       expenseCount: (expenses || []).length
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching analytics:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error?.message || 'Internal server error', details: error },
       { status: 500 }
     );
   }

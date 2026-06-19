@@ -84,7 +84,8 @@ export default function Dashboard() {
       const response = await fetch('/api/analytics');
       
       if (!response.ok) {
-        console.error('Analytics API returned error:', response.status);
+        const errorData = await response.json();
+        console.error('Analytics API error:', errorData);
         setAnalytics({
           monthlyData: [],
           totalIncome: 0,

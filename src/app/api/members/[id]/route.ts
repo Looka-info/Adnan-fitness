@@ -45,7 +45,7 @@ export async function PUT(
     if (phone !== undefined) updateData.phone = phone;
     if (picture !== undefined) updateData.picture = picture;
     if (details !== undefined) updateData.details = details;
-    if (membershipFee !== undefined) updateData.membershipFee = membershipFee;
+    if (membershipFee !== undefined) updateData.membership_fee = membershipFee;
     if (status !== undefined) updateData.status = status;
 
     const { data: member, error } = await supabase
