@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/auth';
-import { Dumbbell, Plus, Edit, Trash2, DollarSign, LogOut, Search, UserPlus, Calendar, AlertCircle, CheckCircle2, Settings, Minus } from 'lucide-react';
+import { Dumbbell, Plus, Edit, Trash2, DollarSign, LogOut, Search, UserPlus, Calendar, AlertCircle, CheckCircle2, Settings, Minus, Eye } from 'lucide-react';
 import AdminSettings from '@/components/admin/AdminSettings';
 import IncomeExpenseChart from '@/components/admin/IncomeExpenseChart';
 import MemberJoinsChart from '@/components/admin/MemberJoinsChart';
@@ -57,6 +57,14 @@ export default function Dashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [expensesLoading, setExpensesLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [memberForm, setMemberForm] = useState<Member | null>(null);
+  const [isEditingMember, setIsEditingMember] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [expenseForm, setExpenseForm] = useState<Expense | null>(null);
+  const [isEditingExpense, setIsEditingExpense] = useState(false);
+  const [isMemberDetailOpen, setIsMemberDetailOpen] = useState(false);
+  const [isExpenseDetailOpen, setIsExpenseDetailOpen] = useState(false);
   const { toast } = useToast();
   const logout = useAuthStore((state) => state.logout);
   
@@ -127,6 +135,7 @@ export default function Dashboard() {
         title: 'Expense deleted',
         description: 'The expense was removed successfully.',
       });
+      closeExpenseDetail();
       fetchExpenses();
       fetchAnalytics();
     } catch (error) {
@@ -135,6 +144,128 @@ export default function Dashboard() {
         variant: 'destructive',
         title: 'Error',
         description: 'Something went wrong while deleting expense.',
+      });
+    }
+  };
+
+  const openMemberDetail = (member: Member) => {
+    setSelectedMember(member);
+    setMemberForm(member);
+    setIsEditingMember(false);
+    setIsMemberDetailOpen(true);
+  };
+
+  const closeMemberDetail = () => {
+    setIsMemberDetailOpen(false);
+    setSelectedMember(null);
+    setMemberForm(null);
+    setIsEditingMember(false);
+  };
+
+  const openExpenseDetail = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setExpenseForm(expense);
+    setIsEditingExpense(false);
+    setIsExpenseDetailOpen(true);
+  };
+
+  const closeExpenseDetail = () => {
+    setIsExpenseDetailOpen(false);
+    setSelectedExpense(null);
+    setExpenseForm(null);
+    setIsEditingExpense(false);
+  };
+
+  const handleUpdateMember = async () => {
+    if (!selectedMember || !memberForm) return;
+
+    try {
+      const response = await fetch(`/api/members/${selectedMember.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: memberForm.name,
+          email: memberForm.email,
+          phone: memberForm.phone,
+          details: memberForm.details,
+          membershipFee: memberForm.membership_fee,
+          status: memberForm.status,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: data.error || 'Failed to update member',
+        });
+        return;
+      }
+
+      setSelectedMember(data.member);
+      setMemberForm(data.member);
+      setIsEditingMember(false);
+      fetchMembers();
+      fetchAnalytics();
+      toast({
+        title: 'Member updated',
+        description: 'Member details were saved successfully.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong while updating member.',
+      });
+    }
+  };
+
+  const handleUpdateExpense = async () => {
+    if (!selectedExpense || !expenseForm) return;
+
+    try {
+      const response = await fetch(`/api/expenses/${selectedExpense.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: expenseForm.amount,
+          category: expenseForm.category,
+          description: expenseForm.description,
+          date: new Date(expenseForm.date).toISOString(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: data.error || 'Failed to update expense',
+        });
+        return;
+      }
+
+      setSelectedExpense(data.expense);
+      setExpenseForm(data.expense);
+      setIsEditingExpense(false);
+      fetchExpenses();
+      fetchAnalytics();
+      toast({
+        title: 'Expense updated',
+        description: 'Expense details were saved successfully.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong while updating expense.',
       });
     }
   };
@@ -828,10 +959,11 @@ export default function Dashboard() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-destructive hover:bg-destructive/10 gap-1"
-                                onClick={() => handleDeleteMember(member.id)}
+                                className="gap-1"
+                                onClick={() => openMemberDetail(member)}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Eye className="h-4 w-4" />
+                                View
                               </Button>
                             </div>
                           </TableCell>
@@ -899,11 +1031,11 @@ export default function Dashboard() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-destructive hover:bg-destructive/10 gap-1"
-                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="gap-1"
+                            onClick={() => openExpenseDetail(expense)}
                           >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
+                            <Eye className="h-4 w-4" />
+                            View
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -925,6 +1057,285 @@ export default function Dashboard() {
           fetchExpenses();
         }}
       />
+
+      <Dialog open={isMemberDetailOpen} onOpenChange={(open) => { if (!open) closeMemberDetail(); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div>
+              <DialogTitle>{selectedMember ? selectedMember.name : 'Member Details'}</DialogTitle>
+              <DialogDescription>Review member information and delete the member from this view.</DialogDescription>
+            </div>
+          </DialogHeader>
+          {selectedMember && memberForm ? (
+            <div className="space-y-6 pt-4">
+              {isEditingMember ? (
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="member-name">Name</Label>
+                      <Input
+                        id="member-name"
+                        value={memberForm.name}
+                        onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="member-email">Email</Label>
+                      <Input
+                        id="member-email"
+                        type="email"
+                        value={memberForm.email || ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="member-phone">Phone</Label>
+                      <Input
+                        id="member-phone"
+                        value={memberForm.phone || ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="member-fee">Monthly Fee</Label>
+                      <Input
+                        id="member-fee"
+                        type="number"
+                        value={memberForm.membership_fee}
+                        onChange={(e) => setMemberForm({ ...memberForm, membership_fee: Number(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="member-status">Status</Label>
+                      <select
+                        id="member-status"
+                        value={memberForm.status}
+                        onChange={(e) => setMemberForm({ ...memberForm, status: e.target.value })}
+                        className="w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="member-details">Details</Label>
+                      <Input
+                        id="member-details"
+                        value={memberForm.details || ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, details: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-border p-4">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Contact</h3>
+                      <p className="mt-2 text-sm">{selectedMember.email || 'No email provided'}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{selectedMember.phone || 'No phone provided'}</p>
+                    </div>
+                    <div className="rounded-xl border border-border p-4">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Membership</h3>
+                      <p className="mt-2 text-sm">Rs. {selectedMember.membership_fee.toLocaleString()}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">Started: {new Date(selectedMember.membership_start).toLocaleDateString('en-PK')}</p>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-border p-4">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Last Payment</h3>
+                      <p className="mt-2 text-sm">
+                        {selectedMember.last_payment_date ? new Date(selectedMember.last_payment_date).toLocaleDateString('en-PK', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        }) : 'Never'}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-border p-4">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Status</h3>
+                      <p className="mt-2 text-sm capitalize">{selectedMember.status}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border p-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground">About</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{selectedMember.details || 'No additional details provided.'}</p>
+                  </div>
+                </>
+              )}
+              <div className="rounded-xl border border-border p-4 bg-muted/10">
+                <p className="text-sm text-muted-foreground">Created at</p>
+                <p className="mt-2 text-sm">{new Date(selectedMember.created_at).toLocaleString()}</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <Button variant="outline" onClick={closeMemberDetail}>Close</Button>
+                {selectedMember && !isEditingMember ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setIsEditingMember(true)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Button>
+                ) : null}
+                {isEditingMember ? (
+                  <Button
+                    className="gap-2"
+                    onClick={() => setIsEditingMember(false)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                ) : null}
+                {isEditingMember ? (
+                  <Button
+                    className="gap-2"
+                    onClick={handleUpdateMember}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Save Changes
+                  </Button>
+                ) : null}
+                <Button
+                  variant="destructive"
+                  className="gap-2"
+                  onClick={() => selectedMember && handleDeleteMember(selectedMember.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Member
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isExpenseDetailOpen} onOpenChange={(open) => { if (!open) closeExpenseDetail(); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div>
+              <DialogTitle>{selectedExpense ? selectedExpense.category : 'Expense Details'}</DialogTitle>
+              <DialogDescription>Review expense information and delete it from this view.</DialogDescription>
+            </div>
+          </DialogHeader>
+          {selectedExpense && expenseForm ? (
+            <div className="space-y-6 pt-4">
+              {isEditingExpense ? (
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="expense-category">Category</Label>
+                      <Input
+                        id="expense-category"
+                        value={expenseForm.category}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="expense-amount">Amount</Label>
+                      <Input
+                        id="expense-amount"
+                        type="number"
+                        value={expenseForm.amount}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, amount: Number(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expense-description">Description</Label>
+                    <Input
+                      id="expense-description"
+                      value={expenseForm.description || ''}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expense-date">Date</Label>
+                    <Input
+                      id="expense-date"
+                      type="date"
+                      value={new Date(expenseForm.date).toISOString().split('T')[0]}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-border p-4">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Amount</h3>
+                      <p className="mt-2 text-2xl font-semibold">Rs. {selectedExpense.amount.toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-xl border border-border p-4">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Date</h3>
+                      <p className="mt-2 text-sm">{new Date(selectedExpense.date).toLocaleDateString('en-PK', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}</p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border p-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground">Description</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{selectedExpense.description || 'No description provided.'}</p>
+                  </div>
+                </>
+              )}
+              <div className="rounded-xl border border-border p-4 bg-muted/10">
+                <p className="text-sm text-muted-foreground">Created at</p>
+                <p className="mt-2 text-sm">{new Date(selectedExpense.created_at).toLocaleString()}</p>
+                <p className="mt-1 text-sm text-muted-foreground">Updated at {new Date(selectedExpense.updated_at).toLocaleString()}</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <Button variant="outline" onClick={closeExpenseDetail}>Close</Button>
+                {selectedExpense && !isEditingExpense ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setIsEditingExpense(true)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Button>
+                ) : null}
+                {isEditingExpense ? (
+                  <Button
+                    className="gap-2"
+                    onClick={() => setIsEditingExpense(false)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                ) : null}
+                {isEditingExpense ? (
+                  <Button
+                    className="gap-2"
+                    onClick={handleUpdateExpense}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Save Changes
+                  </Button>
+                ) : null}
+                <Button
+                  variant="destructive"
+                  className="gap-2"
+                  onClick={() => selectedExpense && handleDeleteExpense(selectedExpense.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Expense
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
