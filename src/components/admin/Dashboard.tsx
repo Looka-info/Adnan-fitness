@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -27,11 +29,11 @@ interface Member {
   phone: string | null;
   picture: string | null;
   details: string | null;
-  membershipFee: number;
-  lastPaymentDate: string | null;
-  membershipStart: string;
+  membership_fee: number;
+  last_payment_date: string | null;
+  membership_start: string;
   status: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export default function Dashboard() {
@@ -52,7 +54,8 @@ export default function Dashboard() {
     phone: '',
     details: '',
     membershipFee: '0',
-    picture: '',
+    picture: null as File | null,
+    lastPaymentDate: new Date(),
   });
 
   useEffect(() => {
@@ -172,12 +175,32 @@ export default function Dashboard() {
     e.preventDefault();
     
     try {
+      let picture = null;
+      
+      // Convert image file to base64
+      if (formData.picture) {
+        picture = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(formData.picture!);
+        });
+      }
+
       const response = await fetch('/api/members', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          details: formData.details,
+          membershipFee: formData.membershipFee,
+          picture,
+          membershipStart: formData.lastPaymentDate.toISOString(),
+        }),
       });
 
       if (response.ok) {
@@ -191,7 +214,8 @@ export default function Dashboard() {
           phone: '',
           details: '',
           membershipFee: '0',
-          picture: '',
+          picture: null,
+          lastPaymentDate: new Date(),
         });
         setIsAddDialogOpen(false);
         fetchMembers();
@@ -251,7 +275,7 @@ export default function Dashboard() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: member.membershipFee }),
+        body: JSON.stringify({ amount: member.membership_fee }),
       });
 
       if (response.ok) {
@@ -286,7 +310,7 @@ export default function Dashboard() {
   const totalMembers = members.length;
   const activeMembers = members.filter(m => m.status === 'active').length;
   const membersWithDue = members.filter(m => {
-    const dues = checkDuesStatus(m.lastPaymentDate);
+    const dues = checkDuesStatus(m.last_payment_date);
     return dues.status === 'overdue' || dues.status === 'due';
   }).length;
 
@@ -540,14 +564,46 @@ export default function Dashboard() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="picture">Picture URL</Label>
+                          <Label htmlFor="picture">Profile Picture</Label>
                           <Input
                             id="picture"
-                            value={formData.picture}
-                            onChange={(e) => setFormData({ ...formData, picture: e.target.value })}
-                            placeholder="https://example.com/photo.jpg"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setFormData({ ...formData, picture: e.target.files?.[0] || null })}
                           />
+                          {formData.picture && (
+                            <p className="text-xs text-muted-foreground">Selected: {formData.picture.name}</p>
+                          )}
                         </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Payment Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              {formData.lastPaymentDate.toLocaleDateString('en-PK', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={formData.lastPaymentDate}
+                              onSelect={(date) => date && setFormData({ ...formData, lastPaymentDate: date })}
+                              disabled={(date) =>
+                                date > new Date() || date < new Date('1900-01-01')
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="details">Additional Details</Label>
@@ -621,7 +677,7 @@ export default function Dashboard() {
                     </TableRow>
                   ) : (
                     filteredMembers.map((member) => {
-                      const duesStatus = checkDuesStatus(member.lastPaymentDate);
+                      const duesStatus = checkDuesStatus(member.last_payment_date);
                       
                       return (
                         <TableRow key={member.id} className="hover:bg-primary/5">
@@ -650,14 +706,14 @@ export default function Dashboard() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <p className="font-semibold">Rs. {member.membershipFee.toLocaleString()}</p>
+                            <p className="font-semibold">Rs. {member.membership_fee.toLocaleString()}</p>
                           </TableCell>
                           <TableCell>
-                            {member.lastPaymentDate ? (
+                            {member.last_payment_date ? (
                               <div className="flex items-center gap-2">
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm">
-                                  {new Date(member.lastPaymentDate).toLocaleDateString('en-PK', {
+                                  {new Date(member.last_payment_date).toLocaleDateString('en-PK', {
                                     day: 'numeric',
                                     month: 'short',
                                     year: 'numeric'

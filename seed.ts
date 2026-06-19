@@ -1,26 +1,28 @@
-import { db } from './src/lib/db';
+import { supabase } from './src/lib/db';
 import { hash } from 'bcryptjs';
 
 async function main() {
-  const adminPassword = await hash('admin123', 10);
-  
-  const admin = await db.admin.upsert({
-    where: { username: 'admin' },
-    update: {},
-    create: {
-      username: 'admin',
-      password: adminPassword
-    }
-  });
+  try {
+    const adminPassword = await hash('admin123', 10);
+    
+    const { data, error } = await supabase
+      .from('admin')
+      .insert([{
+        username: 'admin',
+        password: adminPassword
+      }])
+      .select()
+      .single();
 
-  console.log('Admin created:', admin);
+    if (error && error.code !== '23505') { // 23505 is unique constraint violation
+      throw error;
+    }
+
+    console.log('Admin created/already exists:', data?.username || 'admin');
+  } catch (error) {
+    console.error('Seed error:', error);
+    process.exit(1);
+  }
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await db.$disconnect();
-  });
+main();

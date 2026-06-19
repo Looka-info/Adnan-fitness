@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+<<<<<<< HEAD
+import { supabase } from '@/lib/db';
+=======
 import { supabase } from '@/lib/supabase';
+>>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +12,11 @@ export async function GET(
   try {
     const { id } = await params;
     const { data: member, error } = await supabase
+<<<<<<< HEAD
+      .from('member')
+=======
       .from('Member')
+>>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
       .select('*')
       .eq('id', id)
       .single();
@@ -45,11 +53,19 @@ export async function PUT(
     if (phone !== undefined) updateData.phone = phone;
     if (picture !== undefined) updateData.picture = picture;
     if (details !== undefined) updateData.details = details;
+<<<<<<< HEAD
+    if (membershipFee !== undefined) updateData.membership_fee = membershipFee;
+    if (status !== undefined) updateData.status = status;
+
+    const { data: member, error } = await supabase
+      .from('member')
+=======
     if (membershipFee !== undefined) updateData.membershipFee = membershipFee;
     if (status !== undefined) updateData.status = status;
 
     const { data: member, error } = await supabase
       .from('Member')
+>>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
       .update(updateData)
       .eq('id', id)
       .select()
@@ -74,7 +90,11 @@ export async function DELETE(
   try {
     const { id } = await params;
     const { error } = await supabase
+<<<<<<< HEAD
+      .from('member')
+=======
       .from('Member')
+>>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
       .delete()
       .eq('id', id);
 
