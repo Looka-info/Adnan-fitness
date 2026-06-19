@@ -4,4 +4,14 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 // We use the service role key for the backend to bypass RLS since the app was designed to bypass it with Prisma
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  db: {
+    schema: 'public',
+  },
+  // Disable schema caching to always fetch fresh schema
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});
