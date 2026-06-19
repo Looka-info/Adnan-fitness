@@ -4,17 +4,17 @@ import { supabase } from '@/lib/supabase';
 export async function GET() {
   try {
     const { data: expenses, error } = await supabase
-      .from('Expense')
+      .from('expense')
       .select('*')
       .order('date', { ascending: false });
 
     if (error) throw error;
 
     return NextResponse.json({ expenses });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching expenses:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error?.message || 'Internal server error', details: error },
       { status: 500 }
     );
   }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: expense, error } = await supabase
-      .from('Expense')
+      .from('expense')
       .insert({
         amount: parseFloat(amount),
         category,
@@ -46,10 +46,10 @@ export async function POST(request: NextRequest) {
     if (error || !expense) throw error;
 
     return NextResponse.json({ expense }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating expense:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error?.message || 'Internal server error', details: error },
       { status: 500 }
     );
   }

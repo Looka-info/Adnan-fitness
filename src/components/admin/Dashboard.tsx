@@ -601,9 +601,13 @@ export default function Dashboard() {
                               mode="single"
                               selected={formData.lastPaymentDate}
                               onSelect={(date) => date && setFormData({ ...formData, lastPaymentDate: date })}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date('1900-01-01')
-                              }
+                              disabled={(date) => {
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                const selectedDate = new Date(date);
+                                selectedDate.setHours(0, 0, 0, 0);
+                                return selectedDate > today;
+                              }}
                               initialFocus
                             />
                           </PopoverContent>
