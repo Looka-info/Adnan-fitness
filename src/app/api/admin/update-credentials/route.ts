@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-<<<<<<< HEAD
-import { supabase } from '@/lib/db';
-=======
 import { supabase } from '@/lib/supabase';
->>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
 import { compare, hash } from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
@@ -18,22 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the admin (assuming there's only one admin for now)
-<<<<<<< HEAD
-    const { data: admin, error: fetchError } = await supabase
-      .from('admin')
-=======
     const { data: admin, error: dbError } = await supabase
       .from('Admin')
->>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
       .select('*')
       .limit(1)
       .single();
 
-<<<<<<< HEAD
-    if (fetchError || !admin) {
-=======
     if (dbError || !admin) {
->>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
       return NextResponse.json(
         { error: 'Admin account not found' },
         { status: 404 }
@@ -69,23 +56,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: updatedAdmin, error: updateError } = await supabase
-<<<<<<< HEAD
-      .from('admin')
-=======
       .from('Admin')
->>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
       .update(updateData)
       .eq('id', admin.id)
       .select()
       .single();
 
-<<<<<<< HEAD
-    if (updateError) throw updateError;
-=======
     if (updateError || !updatedAdmin) {
-       throw updateError;
+      throw updateError;
     }
->>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
 
     return NextResponse.json({
       success: true,

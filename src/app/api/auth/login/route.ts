@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-<<<<<<< HEAD
-import { supabase } from '@/lib/db';
-=======
 import { supabase } from '@/lib/supabase';
->>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
 import { compare } from 'bcryptjs';
 import { z } from 'zod';
 import { handleApiError, ApiError } from '@/lib/api-error';
@@ -19,27 +15,13 @@ export async function POST(request: NextRequest) {
     const { username, password } = loginSchema.parse(body);
 
     const { data: admin, error: dbError } = await supabase
-      .from('Admin')
-      .select('*')
-      .eq('username', username)
-      .single();
-
-<<<<<<< HEAD
-    const { data: admin, error } = await supabase
       .from('admin')
       .select('*')
       .eq('username', username)
       .single();
 
-    if (error || !admin) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-=======
     if (dbError || !admin) {
       throw new ApiError('Invalid credentials', 401);
->>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
     }
 
     const isValidPassword = await compare(password, admin.password);

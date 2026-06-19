@@ -52,35 +52,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ member }, { status: 201 });
   } catch (error) {
-    console.error('Error creating member:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-=======
-    const { data: member, error } = await supabase
-      .from('Member')
-      .insert({
-        name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
-        picture: data.picture || null,
-        details: data.details || null,
-        membershipFee: data.membershipFee,
-        membershipStart: data.membershipStart ? new Date(data.membershipStart).toISOString() : new Date().toISOString(),
-        lastPaymentDate: new Date().toISOString(),
-        status: 'active'
-      })
-      .select()
-      .single();
-
-    if (error || !member) throw error;
->>>>>>> d2a29df4b501b4886ea8fd18233d1263a4850e93
-
-    return NextResponse.json({ member }, { status: 201 });
-  } catch (error) {
     return handleApiError(error);
   }
 }
