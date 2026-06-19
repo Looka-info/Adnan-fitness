@@ -191,6 +191,8 @@ export default function Dashboard() {
           phone: memberForm.phone,
           details: memberForm.details,
           membershipFee: memberForm.membership_fee,
+          membershipStart: memberForm.membership_start,
+          lastPaymentDate: memberForm.last_payment_date,
           status: memberForm.status,
         }),
       });
@@ -1108,7 +1110,7 @@ export default function Dashboard() {
                       />
                     </div>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
                       <Label htmlFor="member-status">Status</Label>
                       <select
@@ -1122,13 +1124,31 @@ export default function Dashboard() {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="member-details">Details</Label>
+                      <Label htmlFor="member-start">Membership Start</Label>
                       <Input
-                        id="member-details"
-                        value={memberForm.details || ''}
-                        onChange={(e) => setMemberForm({ ...memberForm, details: e.target.value })}
+                        id="member-start"
+                        type="date"
+                        value={memberForm.membership_start ? new Date(memberForm.membership_start).toISOString().split('T')[0] : ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, membership_start: e.target.value ? new Date(e.target.value).toISOString() : '' })}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="member-last-payment">Last Payment</Label>
+                      <Input
+                        id="member-last-payment"
+                        type="date"
+                        value={memberForm.last_payment_date ? new Date(memberForm.last_payment_date).toISOString().split('T')[0] : ''}
+                        onChange={(e) => setMemberForm({ ...memberForm, last_payment_date: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="member-details">Details</Label>
+                    <Input
+                      id="member-details"
+                      value={memberForm.details || ''}
+                      onChange={(e) => setMemberForm({ ...memberForm, details: e.target.value })}
+                    />
                   </div>
                 </div>
               ) : (

@@ -37,7 +37,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, email, phone, picture, details, membershipFee, status } = body;
+    const { name, email, phone, picture, details, membershipFee, status, membershipStart, lastPaymentDate } = body;
 
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
@@ -47,6 +47,8 @@ export async function PUT(
     if (details !== undefined) updateData.details = details;
     if (membershipFee !== undefined) updateData.membership_fee = membershipFee;
     if (status !== undefined) updateData.status = status;
+    if (membershipStart !== undefined) updateData.membership_start = membershipStart ? new Date(membershipStart).toISOString() : null;
+    if (lastPaymentDate !== undefined) updateData.last_payment_date = lastPaymentDate ? new Date(lastPaymentDate).toISOString() : null;
 
     const { data: member, error } = await supabase
       .from('member')
