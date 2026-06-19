@@ -11,10 +11,10 @@ export async function POST(
     const { amount } = body;
 
     const { data: member, error: memberError } = await supabase
-      .from('Member')
+      .from('member')
       .update({
-        lastPaymentDate: new Date().toISOString(),
-        ...(amount !== undefined && { membershipFee: parseFloat(amount) })
+        last_payment_date: new Date().toISOString(),
+        ...(amount !== undefined && { membership_fee: parseFloat(amount) })
       })
       .eq('id', id)
       .select()
@@ -23,14 +23,14 @@ export async function POST(
     if (memberError || !member) throw memberError;
 
     // Create payment record
-    const paymentAmount = amount !== undefined ? parseFloat(amount) : member.membershipFee;
+    const paymentAmount = amount !== undefined ? parseFloat(amount) : member.membership_fee;
     const { error: paymentError } = await supabase
-      .from('Payment')
+      .from('payment')
       .insert({
         amount: paymentAmount,
         date: new Date().toISOString(),
         description: `Membership payment from ${member.name}`,
-        memberId: id
+        member_id: id
       });
 
     if (paymentError) throw paymentError;

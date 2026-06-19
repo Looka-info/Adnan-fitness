@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = await params;
     const { data: member, error } = await supabase
-      .from('Member')
+      .from('member')
       .select('*')
       .eq('id', id)
       .single();
@@ -49,7 +49,7 @@ export async function PUT(
     if (status !== undefined) updateData.status = status;
 
     const { data: member, error } = await supabase
-      .from('Member')
+      .from('member')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -74,7 +74,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const { error, data } = await supabase
-      .from('Member')
+      .from('member')
       .delete()
       .eq('id', id)
       .select()

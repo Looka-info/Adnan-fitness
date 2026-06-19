@@ -12,19 +12,19 @@ export async function GET(request: NextRequest) {
 
     // Get member joins per month
     const { data: members, error: err1 } = await supabase
-      .from('Member')
-      .select('createdAt, status')
-      .gte('createdAt', startDateStr);
+      .from('member')
+      .select('created_at, status')
+      .gte('created_at', startDateStr);
 
     // Get payments per month
     const { data: payments, error: err2 } = await supabase
-      .from('Payment')
+      .from('payment')
       .select('date, amount')
       .gte('date', startDateStr);
 
     // Get expenses per month
     const { data: expenses, error: err3 } = await supabase
-      .from('Expense')
+      .from('expense')
       .select('date, amount, category')
       .gte('date', startDateStr);
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Member status distribution
-    const { data: allMembers, error: err4 } = await supabase.from('Member').select('status');
+    const { data: allMembers, error: err4 } = await supabase.from('member').select('status');
     if (err4) throw err4;
     
     const activeMembers = (allMembers || []).filter((m: any) => m.status === 'active').length;
