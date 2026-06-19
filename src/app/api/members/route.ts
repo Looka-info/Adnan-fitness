@@ -23,7 +23,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, phone, picture, details, membershipFee, membershipStart } = body;
+    const { name, email, phone, picture, details, membershipFee, membershipStart, lastPaymentDate } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -41,8 +41,14 @@ export async function POST(request: NextRequest) {
         picture: picture || null,
         details: details || null,
         membership_fee: parseFloat(membershipFee) || 0,
-        membership_start: membershipStart ? new Date(membershipStart).toISOString() : new Date().toISOString(),
-        last_payment_date: new Date().toISOString(),
+        membership_start: membershipStart
+          ? new Date(membershipStart).toISOString()
+          : lastPaymentDate
+          ? new Date(lastPaymentDate).toISOString()
+          : new Date().toISOString(),
+        last_payment_date: lastPaymentDate
+          ? new Date(lastPaymentDate).toISOString()
+          : new Date().toISOString(),
         status: 'active'
       }])
       .select()

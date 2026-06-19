@@ -22,6 +22,16 @@ import MemberStatusPieChart from '@/components/admin/MemberStatusPieChart';
 import NetProfitCard from '@/components/admin/NetProfitCard';
 import AddExpenseDialog from '@/components/admin/AddExpenseDialog';
 
+interface Expense {
+  id: string;
+  amount: number;
+  category: string;
+  description: string | null;
+  date: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Member {
   id: string;
   name: string;
@@ -45,6 +55,8 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [analytics, setAnalytics] = useState<any>(null);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expensesLoading, setExpensesLoading] = useState(true);
   const { toast } = useToast();
   const logout = useAuthStore((state) => state.logout);
   
@@ -61,6 +73,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchMembers();
     fetchAnalytics();
+    fetchExpenses();
   }, []);
 
   const fetchMembers = async () => {
@@ -76,6 +89,53 @@ export default function Dashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchExpenses = async () => {
+    try {
+      const response = await fetch('/api/expenses');
+      const data = await response.json();
+      setExpenses(data.expenses || []);
+    } catch (error) {
+      console.error('Failed to fetch expenses:', error);
+    } finally {
+      setExpensesLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this expense?')) return;
+
+    try {
+      const response = await fetch(`/api/expenses/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Delete expense error:', errorData);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: errorData.error || 'Failed to delete expense',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Expense deleted',
+        description: 'The expense was removed successfully.',
+      });
+      fetchExpenses();
+      fetchAnalytics();
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong while deleting expense.',
+      });
     }
   };
 
@@ -200,7 +260,7 @@ export default function Dashboard() {
           details: formData.details,
           membershipFee: formData.membershipFee,
           picture,
-          membershipStart: formData.lastPaymentDate.toISOString(),
+          lastPaymentDate: formData.lastPaymentDate.toISOString(),
         }),
       });
 
@@ -221,6 +281,7 @@ export default function Dashboard() {
         setIsAddDialogOpen(false);
         fetchMembers();
         fetchAnalytics();
+        fetchExpenses();
       } else {
         const data = await response.json();
         toast({
@@ -498,20 +559,13 @@ export default function Dashboard() {
                 <CardDescription>Manage your fitness club members and track payments</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Dialog open={isExpenseDialogOpen} onOpenChange={setIsExpenseDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-red-600 hover:bg-red-700 text-white font-semibold gap-2">
-                      <Minus className="h-4 w-4" />
-                      Add Expense
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Record Expense</DialogTitle>
-                      <DialogDescription>Expense dialog will appear here</DialogDescription>
-                    </DialogHeader>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  onClick={() => setIsExpenseDialogOpen(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold gap-2"
+                >
+                  <Minus className="h-4 w-4" />
+                  Add Expense
+                </Button>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2">
@@ -790,13 +844,86 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border-2 border-primary/20 mt-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl">Expenses</CardTitle>
+                <CardDescription>Track and remove recent expenses</CardDescription>
+              </div>
+              <div>
+                <Button
+                  onClick={() => setIsExpenseDialogOpen(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold gap-2"
+                >
+                  <Minus className="h-4 w-4" />
+                  Add Expense
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {expensesLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading expenses...</div>
+            ) : expenses.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No expenses recorded yet.
+              </div>
+            ) : (
+              <div className="rounded-lg border-2 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-primary/10">
+                      <TableHead className="font-bold">Date</TableHead>
+                      <TableHead className="font-bold">Category</TableHead>
+                      <TableHead className="font-bold">Amount</TableHead>
+                      <TableHead className="font-bold">Description</TableHead>
+                      <TableHead className="font-bold text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {expenses.map((expense) => (
+                      <TableRow key={expense.id} className="hover:bg-primary/5">
+                        <TableCell>
+                          {new Date(expense.date).toLocaleDateString('en-PK', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </TableCell>
+                        <TableCell>{expense.category}</TableCell>
+                        <TableCell>Rs. {expense.amount.toLocaleString()}</TableCell>
+                        <TableCell>{expense.description || '—'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:bg-destructive/10 gap-1"
+                            onClick={() => handleDeleteExpense(expense.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
       
       <AdminSettings open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       <AddExpenseDialog 
         open={isExpenseDialogOpen} 
         onOpenChange={setIsExpenseDialogOpen}
-        onSuccess={fetchAnalytics}
+        onSuccess={() => {
+          fetchAnalytics();
+          fetchExpenses();
+        }}
       />
     </div>
   );
