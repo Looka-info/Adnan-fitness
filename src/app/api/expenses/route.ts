@@ -23,11 +23,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { amount, category, description } = body;
+    const { amount, category, description, date } = body;
 
     if (!amount || !category) {
       return NextResponse.json(
         { error: 'Amount and category are required' },
+        { status: 400 }
+      );
+    }
+
+    const expenseDate = date ? new Date(date) : new Date();
+    if (Number.isNaN(expenseDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid date provided' },
         { status: 400 }
       );
     }
@@ -38,7 +46,7 @@ export async function POST(request: NextRequest) {
         amount: parseFloat(amount),
         category,
         description: description || null,
-        date: new Date().toISOString()
+        date: expenseDate.toISOString()
       })
       .select()
       .single();

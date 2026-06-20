@@ -29,6 +29,7 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }: AddE
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -44,6 +45,28 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }: AddE
       return;
     }
 
+    const expenseDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (Number.isNaN(expenseDate.getTime())) {
+      toast({
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Please select a valid expense date.',
+      });
+      return;
+    }
+
+    if (expenseDate > today) {
+      toast({
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Expense date cannot be in the future.',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -55,7 +78,8 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }: AddE
         body: JSON.stringify({
           amount: parseFloat(amount),
           category,
-          description
+          description,
+          date: new Date(date).toISOString()
         }),
       });
 
@@ -68,6 +92,7 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }: AddE
         setAmount('');
         setCategory('');
         setDescription('');
+        setDate(new Date().toISOString().split('T')[0]);
         onOpenChange(false);
         onSuccess?.();
       } else {
@@ -113,6 +138,19 @@ export default function AddExpenseDialog({ open, onOpenChange, onSuccess }: AddE
               required
               min="0"
               step="0.01"
+              className="border-2"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="date">Expense Date *</Label>
+            <Input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              max={new Date().toISOString().split('T')[0]}
               className="border-2"
             />
           </div>
