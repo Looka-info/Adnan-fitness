@@ -1071,7 +1071,7 @@ export default function Dashboard() {
           {selectedMember && memberForm ? (
             <div className="space-y-6 pt-4">
               <div className="flex justify-center mb-4">
-                <Avatar className="h-24 w-24 border-4 border-primary/20">
+                <Avatar className="h-20 w-20 border-4 border-primary/20">
                   <AvatarImage src={selectedMember.picture || undefined} alt={selectedMember.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
                     {selectedMember.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}

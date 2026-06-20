@@ -8,8 +8,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const months = parseInt(searchParams.get('months') || '6');
 
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - months);
+    const currentMonthStart = new Date();
+    currentMonthStart.setHours(0, 0, 0, 0);
+    currentMonthStart.setDate(1);
+
+    const startDate = new Date(currentMonthStart);
+    startDate.setMonth(startDate.getMonth() - months + 1);
     const startDateStr = startDate.toISOString();
 
     // Get member joins per month
@@ -41,9 +45,9 @@ export async function GET(request: NextRequest) {
 
     // Format data for charts
     const monthlyData: any[] = [];
-    for (let i = months - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
+    for (let i = 0; i < months; i++) {
+      const date = new Date(startDate);
+      date.setMonth(startDate.getMonth() + i);
       
       const year = date.getFullYear();
       const month = date.getMonth();
