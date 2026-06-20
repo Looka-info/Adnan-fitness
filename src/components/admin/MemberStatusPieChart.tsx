@@ -33,19 +33,27 @@ export default function MemberStatusPieChart({ data }: MemberStatusPieChartProps
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
-        <CardTitle className="text-xl">Member Status</CardTitle>
-        <CardDescription>Active vs inactive members</CardDescription>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-xl">Member Status</CardTitle>
+            <CardDescription>Active vs inactive members</CardDescription>
+          </div>
+          <div className="rounded-full bg-muted px-3 py-1 text-sm font-semibold">
+            Total: {total}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
               outerRadius={100}
+              innerRadius={60}
               fill="#8884d8"
               dataKey="value"
             >
@@ -61,7 +69,7 @@ export default function MemberStatusPieChart({ data }: MemberStatusPieChartProps
                 borderRadius: '8px'
               }}
             />
-            <Legend />
+            <Legend verticalAlign="bottom" height={36} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

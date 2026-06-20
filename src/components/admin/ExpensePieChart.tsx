@@ -39,19 +39,27 @@ export default function ExpensePieChart({ data }: ExpensePieChartProps) {
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
-        <CardTitle className="text-xl">Expense Breakdown</CardTitle>
-        <CardDescription>Distribution by category</CardDescription>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-xl">Expense Breakdown</CardTitle>
+            <CardDescription>Distribution by category</CardDescription>
+          </div>
+          <div className="rounded-full bg-muted px-3 py-1 text-sm font-semibold">
+            Total: Rs. {data.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
               outerRadius={100}
+              innerRadius={55}
               fill="#8884d8"
               dataKey="amount"
             >
@@ -67,7 +75,7 @@ export default function ExpensePieChart({ data }: ExpensePieChartProps) {
                 borderRadius: '8px'
               }}
             />
-            <Legend />
+            <Legend verticalAlign="bottom" height={36} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

@@ -512,6 +512,16 @@ export default function Dashboard() {
     return dues.status === 'overdue' || dues.status === 'due';
   }).length;
 
+  const totalExpensesAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthExpensesAmount = expenses.reduce((sum, expense) => {
+    const expenseDate = new Date(expense.date);
+    return expenseDate >= monthStart ? sum + expense.amount : sum;
+  }, 0);
+  const latestExpense = expenses[0];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -998,6 +1008,22 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
+            <div className="grid gap-4 md:grid-cols-3 mb-6">
+              <div className="rounded-3xl border border-border bg-background p-4">
+                <p className="text-sm text-muted-foreground">Total Expenses</p>
+                <p className="text-2xl font-semibold text-red-600">Rs. {totalExpensesAmount.toLocaleString()}</p>
+              </div>
+              <div className="rounded-3xl border border-border bg-background p-4">
+                <p className="text-sm text-muted-foreground">This Month</p>
+                <p className="text-2xl font-semibold">Rs. {monthExpensesAmount.toLocaleString()}</p>
+              </div>
+              <div className="rounded-3xl border border-border bg-background p-4">
+                <p className="text-sm text-muted-foreground">Latest Expense</p>
+                <p className="text-base font-medium">
+                  {latestExpense ? new Date(latestExpense.date).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : 'None'}
+                </p>
+              </div>
+            </div>
             {expensesLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading expenses...</div>
             ) : expenses.length === 0 ? (
@@ -1026,9 +1052,13 @@ export default function Dashboard() {
                             year: 'numeric'
                           })}
                         </TableCell>
-                        <TableCell>{expense.category}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{expense.category}</Badge>
+                        </TableCell>
                         <TableCell>Rs. {expense.amount.toLocaleString()}</TableCell>
-                        <TableCell>{expense.description || '—'}</TableCell>
+                        <TableCell className="max-w-md text-sm text-muted-foreground line-clamp-2">
+                          {expense.description || 'No description provided.'}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Button
                             size="sm"

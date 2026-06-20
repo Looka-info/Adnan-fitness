@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
 
 interface MemberJoinsChartProps {
   data: Array<{
@@ -18,17 +18,20 @@ export default function MemberJoinsChart({ data }: MemberJoinsChartProps) {
         <CardDescription>Member registration trends over time</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart data={data} margin={{ top: 16, right: 12, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis 
-              dataKey="month" 
+            <XAxis
+              dataKey="month"
               className="text-xs"
               stroke="currentColor"
+              interval={0}
+              tick={{ dy: 6 }}
             />
-            <YAxis 
+            <YAxis
               className="text-xs"
               stroke="currentColor"
+              tickCount={5}
             />
             <Tooltip
               formatter={(value: number) => [value, 'Members']}
@@ -38,11 +41,13 @@ export default function MemberJoinsChart({ data }: MemberJoinsChartProps) {
                 borderRadius: '8px'
               }}
             />
-            <Bar 
-              dataKey="newMembers" 
-              fill="hsl(0, 72%, 51%)"
+            <Bar
+              dataKey="newMembers"
+              fill="hsl(217, 91%, 60%)"
               radius={[8, 8, 0, 0]}
-            />
+            >
+              <LabelList dataKey="newMembers" position="top" fill="currentColor" />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
