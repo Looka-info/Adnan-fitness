@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Legend } from 'recharts';
 
 interface MemberJoinsChartProps {
   data: Array<{
@@ -11,6 +11,22 @@ interface MemberJoinsChartProps {
 }
 
 export default function MemberJoinsChart({ data }: MemberJoinsChartProps) {
+  if (data.length === 0) {
+    return (
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="text-xl">New Members</CardTitle>
+          <CardDescription>Member registration trends over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[320px] text-muted-foreground">
+            No member registration history to display
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
@@ -41,6 +57,7 @@ export default function MemberJoinsChart({ data }: MemberJoinsChartProps) {
                 borderRadius: '8px'
               }}
             />
+            <Legend verticalAlign="top" iconType="circle" height={32} />
             <Bar
               dataKey="newMembers"
               fill="hsl(217, 91%, 60%)"

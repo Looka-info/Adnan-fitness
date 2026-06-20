@@ -13,6 +13,22 @@ interface IncomeExpenseChartProps {
 }
 
 export default function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
+  if (data.length === 0) {
+    return (
+      <Card className="border-2 border-primary/20">
+        <CardHeader>
+          <CardTitle className="text-xl">Income vs Expenses</CardTitle>
+          <CardDescription>Monthly revenue and expense tracking</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[320px] text-muted-foreground">
+            No income or expense history to display
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-2 border-primary/20">
       <CardHeader>
@@ -46,7 +62,7 @@ export default function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
                 color: 'inherit'
               }}
             />
-            <Legend iconType="circle" />
+            <Legend verticalAlign="top" iconType="circle" height={32} />
             <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="3 3" />
             <Line
               type="monotone"

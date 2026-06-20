@@ -20,6 +20,8 @@ const COLORS = [
 ];
 
 export default function ExpensePieChart({ data }: ExpensePieChartProps) {
+  const totalExpense = data.reduce((sum, item) => sum + item.amount, 0);
+
   if (data.length === 0) {
     return (
       <Card className="border-2 border-primary/20">
@@ -45,7 +47,7 @@ export default function ExpensePieChart({ data }: ExpensePieChartProps) {
             <CardDescription>Distribution by category</CardDescription>
           </div>
           <div className="rounded-full bg-muted px-3 py-1 text-sm font-semibold">
-            Total: Rs. {data.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}
+            Total: Rs. {totalExpense.toLocaleString()}
           </div>
         </div>
       </CardHeader>

@@ -85,10 +85,9 @@ export async function GET(request: NextRequest) {
       return acc;
     }, {} as Record<string, number>);
 
-    const expenseChartData = Object.entries(expenseByCategory).map(([category, amount]) => ({
-      category,
-      amount
-    }));
+    const expenseChartData = Object.entries(expenseByCategory)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount);
 
     // Member status distribution
     const { data: allMembers, error: err4 } = await supabase.from('member').select('status');
