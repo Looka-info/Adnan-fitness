@@ -702,13 +702,6 @@ export default function Dashboard() {
                 <CardDescription>Manage your fitness club members and track payments</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => setIsExpenseDialogOpen(true)}
-                  className="bg-red-600 hover:bg-red-700 text-white font-semibold gap-2"
-                >
-                  <Minus className="h-4 w-4" />
-                  Add Expense
-                </Button>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2">
@@ -1101,9 +1094,9 @@ export default function Dashboard() {
           {selectedMember && memberForm ? (
             <div className="space-y-6 pt-4">
               <div className="flex justify-center mb-4">
-                <Avatar className="h-20 w-20 border-4 border-primary/20">
+                <Avatar className="h-28 w-28 border-4 border-primary/20">
                   <AvatarImage src={selectedMember.picture || undefined} alt={selectedMember.name} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">
                     {selectedMember.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
