@@ -20,7 +20,7 @@ export function handleApiError(error: any) {
     return NextResponse.json(
       {
         error: 'Validation Error',
-        details: error.errors.map((e: any) => ({
+        details: (error as any).errors.map((e: any) => ({
           field: e.path.join('.'),
           message: e.message
         }))

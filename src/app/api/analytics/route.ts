@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -38,7 +40,7 @@ export async function GET(request: NextRequest) {
     const netProfit = totalIncome - totalExpenses;
 
     // Format data for charts
-    const monthlyData = [];
+    const monthlyData: any[] = [];
     for (let i = months - 1; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
       const monthExpenseTotal = monthExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 
       monthlyData.push({
-        month: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
         income: monthIncome,
         expenses: monthExpenseTotal,
         netProfit: monthIncome - monthExpenseTotal,

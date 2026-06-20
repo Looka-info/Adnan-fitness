@@ -56,8 +56,31 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Create initial payment record
+    const paymentAmount = parseFloat(membershipFee) || 0;
+    if (paymentAmount > 0) {
+      const paymentDate = lastPaymentDate
+        ? new Date(lastPaymentDate).toISOString()
+        : new Date().toISOString();
+
+      const { error: paymentError } = await supabase
+        .from('payment')
+        .insert([{
+          amount: paymentAmount,
+          date: paymentDate,
+          description: `Initial membership payment from ${name}`,
+          member_id: member.id
+        }]);
+
+      if (paymentError) console.error('Error creating initial payment:', paymentError);
+    }
+
     return NextResponse.json({ member }, { status: 201 });
-  } catch (error) {
-    return handleApiError(error);
+  } catch (error: any) {
+    console.error('Error in member POST:', error);
+    return NextResponse.json(
+      { error: error?.message || 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

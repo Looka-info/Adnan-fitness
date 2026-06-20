@@ -369,11 +369,11 @@ export default function Dashboard() {
     e.preventDefault();
     
     try {
-      let picture = null;
+      let picture: string | null = null;
       
       // Convert image file to base64
       if (formData.picture) {
-        picture = await new Promise((resolve, reject) => {
+        picture = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = reject;
@@ -1070,6 +1070,14 @@ export default function Dashboard() {
           </DialogHeader>
           {selectedMember && memberForm ? (
             <div className="space-y-6 pt-4">
+              <div className="flex justify-center mb-4">
+                <Avatar className="h-24 w-24 border-4 border-primary/20">
+                  <AvatarImage src={selectedMember.picture || undefined} alt={selectedMember.name} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
+                    {selectedMember.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
               {isEditingMember ? (
                 <div className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
